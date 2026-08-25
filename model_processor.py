@@ -1,7 +1,7 @@
 import xarray as xr
 
 
-FILE = "RSMC_hycom_20260824.nc"
+FILE ='/home/riamudhole/comp-phy/SIH/backend_backup/RSMC_hycom_20260824.nc'
 
 
 class HYCOMModel:
@@ -33,31 +33,6 @@ class HYCOMModel:
         )
 
         return temperature
-        def get_temperature_region(
-        self,
-        time_index=0,
-        depth=50,
-        lat_min=-10,
-        lat_max=25,
-        lon_min=40,
-        lon_max=100,
-        stride=5
-    ):
-        """Return a spatially subsetted and downsampled temperature field."""
-
-        temperature = self.ds["TEMP"].sel(
-            TIME=self.ds["TIME"].isel(TIME=time_index),
-            DEPTH=depth,
-            LAT=slice(lat_min, lat_max),
-            LON=slice(lon_min, lon_max)
-        )
-
-        temperature = temperature.isel(
-            LAT=slice(None, None, stride),
-            LON=slice(None, None, stride)
-        )
-
-        return temperature
 
     def get_salinity(self, time_index=0, depth=0):
         """Return a salinity field for one time and physical depth."""
@@ -85,7 +60,63 @@ class HYCOMModel:
         )
 
         return u, v
+    def get_temperature_region(
+        self,
+        time_index=0,
+        depth=50,
+        lat_min=-10,
+        lat_max=25,
+        lon_min=40,
+        lon_max=100,
+        stride=5
+    ):
+        """Return a spatially subsetted and downsampled temperature field."""
+
+        temperature = self.ds["TEMP"].sel(
+            TIME=self.ds["TIME"].isel(TIME=time_index),
+            DEPTH=depth,
+            LAT=slice(lat_min, lat_max),
+            LON=slice(lon_min, lon_max)
+        )
+
+        temperature = temperature.isel(
+            LAT=slice(None, None, stride),
+            LON=slice(None, None, stride)
+        )
+
+        return temperature
+    def temperature_to_dict(
+        self,
+        time_index=0,
+        depth=50,
+        lat_min=-10,
+        lat_max=25,
+        lon_min=40,
+        lon_max=100,
+        stride=5
+    ):
+        """Return a temperature region in JSON-friendly format."""
+
+        temperature = self.get_temperature_region(
+            time_index=time_index,
+            depth=depth,
+            lat_min=lat_min,
+            lat_max=lat_max,
+            lon_min=lon_min,
+            lon_max=lon_max,
+            stride=stride
+        )
+
+        return {
+            "variable": "temperature",
+            "time": str(temperature["TIME"].values),
+            "depth": float(temperature["DEPTH"].values),
+            "latitude": temperature["LAT"].values.tolist(),
+            "longitude": temperature["LON"].values.tolist(),
+            "values": temperature.values.tolist()
+        }
 
     def close(self):
         """Close the underlying NetCDF file."""
         self.ds.close()
+

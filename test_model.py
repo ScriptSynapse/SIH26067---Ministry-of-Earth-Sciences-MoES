@@ -4,28 +4,31 @@ from model_processor import HYCOMModel
 def main():
     model = HYCOMModel()
 
-    print("Available depths:")
-    print(model.ds["DEPTH"].values)
-
-    print("\nAvailable times:")
-    print(model.ds["TIME"].values)
-
-    print("\nDataset metadata:")
-    print(model.metadata())
-
-    temperature = model.get_temperature(
+    data = model.temperature_to_dict(
         time_index=0,
-        depth=50
+        depth=50,
+        lat_min=-10,
+        lat_max=25,
+        lon_min=40,
+        lon_max=100,
+        stride=5
     )
 
-    print("\nTemperature slice:")
-    print(temperature)
+    print("Variable:", data["variable"])
+    print("Time:", data["time"])
+    print("Depth:", data["depth"])
 
-    print("\nTemperature dimensions:")
-    print(temperature.dims)
+    print("\nNumber of latitudes:", len(data["latitude"]))
+    print("Number of longitudes:", len(data["longitude"]))
 
-    print("\nTemperature shape:")
-    print(temperature.shape)
+    print("\nFirst 5 latitudes:")
+    print(data["latitude"][:5])
+
+    print("\nFirst 5 longitudes:")
+    print(data["longitude"][:5])
+
+    print("\nFirst row of temperature values:")
+    print(data["values"][0][:10])
 
     model.close()
 
