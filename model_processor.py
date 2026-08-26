@@ -1,7 +1,7 @@
 import xarray as xr
 
 
-FILE ='/home/riamudhole/comp-phy/SIH/backend_backup/RSMC_hycom_20260824.nc'
+FILE = "/home/riamudhole/comp-phy/SIH/backend_backup/RSMC_hycom_20260824.nc"
 
 
 class HYCOMModel:
@@ -10,6 +10,7 @@ class HYCOMModel:
 
     def metadata(self):
         """Return basic information about the HYCOM dataset."""
+
         return {
             "variables": list(self.ds.data_vars),
             "times": self.ds["TIME"].values,
@@ -60,6 +61,7 @@ class HYCOMModel:
         )
 
         return u, v
+
     def get_temperature_region(
         self,
         time_index=0,
@@ -84,7 +86,81 @@ class HYCOMModel:
             LON=slice(None, None, stride)
         )
 
+        temperature = temperature.where(temperature > -1e30)
+
         return temperature
+
+    def get_salinity_region(
+        self,
+        time_index=0,
+        depth=50,
+        lat_min=-10,
+        lat_max=25,
+        lon_min=40,
+        lon_max=100,
+        stride=5
+    ):
+        """Return a spatially subsetted and downsampled salinity field."""
+
+        salinity = self.ds["SALN"].sel(
+            TIME=self.ds["TIME"].isel(TIME=time_index),
+            DEPTH=depth,
+            LAT=slice(lat_min, lat_max),
+            LON=slice(lon_min, lon_max)
+        )
+
+        salinity = salinity.isel(
+            LAT=slice(None, None, stride),
+            LON=slice(None, None, stride)
+        )
+
+        salinity = salinity.where(salinity > -1e30)
+
+        return salinity
+
+    def get_currents_region(
+        self,
+        time_index=0,
+        depth=50,
+        lat_min=-10,
+        lat_max=25,
+        lon_min=40,
+        lon_max=100,
+        stride=5
+    ):
+        """Return a spatially subsetted and downsampled current field."""
+
+        time = self.ds["TIME"].isel(TIME=time_index)
+
+        u = self.ds["UVEL"].sel(
+            TIME=time,
+            DEPTH=depth,
+            LAT=slice(lat_min, lat_max),
+            LON=slice(lon_min, lon_max)
+        )
+
+        v = self.ds["VVEL"].sel(
+            TIME=time,
+            DEPTH=depth,
+            LAT=slice(lat_min, lat_max),
+            LON=slice(lon_min, lon_max)
+        )
+
+        u = u.isel(
+            LAT=slice(None, None, stride),
+            LON=slice(None, None, stride)
+        )
+
+        v = v.isel(
+            LAT=slice(None, None, stride),
+            LON=slice(None, None, stride)
+        )
+
+        u = u.where(u > -1e30)
+        v = v.where(v > -1e30)
+
+        return u, v
+
     def temperature_to_dict(
         self,
         time_index=0,
@@ -95,7 +171,7 @@ class HYCOMModel:
         lon_max=100,
         stride=5
     ):
-        """Return a temperature region in JSON-friendly format."""
+        """Return temperature data in JSON-friendly format."""
 
         temperature = self.get_temperature_region(
             time_index=time_index,
@@ -116,7 +192,70 @@ class HYCOMModel:
             "values": temperature.values.tolist()
         }
 
+    def salinity_to_dict(
+        self,
+        time_index=0,
+        depth=50,
+        lat_min=-10,
+        lat_max=25,
+        lon_min=40,
+        lon_max=100,
+        stride=5
+    ):
+        """Return salinity data in JSON-friendly format."""
+
+        salinity = self.get_salinity_region(
+            time_index=time_index,
+            depth=depth,
+            lat_min=lat_min,
+            lat_max=lat_max,
+            lon_min=lon_min,
+            lon_max=lon_max,
+            stride=stride
+        )
+
+        return {
+            "variable": "salinity",
+            "time": str(salinity["TIME"].values),
+            "depth": float(salinity["DEPTH"].values),
+            "latitude": salinity["LAT"].values.tolist(),
+            "longitude": salinity["LON"].values.tolist(),
+            "values": salinity.values.tolist()
+        }
+
+    def currents_to_dict(
+        self,
+        time_index=0,
+        depth=50,
+        lat_min=-10,
+        lat_max=25,
+        lon_min=40,
+        lon_max=100,
+        stride=5
+    ):
+        """Return current vectors in JSON-friendly format."""
+
+        u, v = self.get_currents_region(
+            time_index=time_index,
+            depth=depth,
+            lat_min=lat_min,
+            lat_max=lat_max,
+            lon_min=lon_min,
+            lon_max=lon_max,
+            stride=stride
+        )
+
+        return {
+            "variable": "currents",
+            "time": str(u["TIME"].values),
+            "depth": float(u["DEPTH"].values),
+            "latitude": u["LAT"].values.tolist(),
+            "longitude": u["LON"].values.tolist(),
+            "u": u.values.tolist(),
+            "v": v.values.tolist()
+        }
+
     def close(self):
         """Close the underlying NetCDF file."""
-        self.ds.close()
 
+        self.ds.close()
