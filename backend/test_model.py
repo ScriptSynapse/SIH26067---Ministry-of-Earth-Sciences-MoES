@@ -1,4 +1,4 @@
-from model_processor import HYCOMModel
+from backend.model_processor import HYCOMModel
 
 
 def main():
