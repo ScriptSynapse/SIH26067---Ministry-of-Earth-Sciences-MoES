@@ -13,7 +13,31 @@ def root():
 def health_check():
     return {"status": "ok"}
 
+
+## Metadata
 @app.get("/metadata")
+
+## just a test for metadata
+# def get_metadata():
+#     return {
+#         "model": "HYCOM",
+#         "variables": [
+#             "temperature",
+#             "salinity",
+#             "u_current",
+#             "v_current"
+#         ],
+#         "depths": [
+#             0,
+#             10,
+#             20,
+#             50,
+#             100
+#         ],
+#         "status": "test data"
+#     }
+
+
 def metadata():
     model = HYCOMModel() ## opening the HYCOM NetCDF file
     metadata = model.metadata() ##calling the method
@@ -23,4 +47,15 @@ def metadata():
         "depths": [float(depth) for depth in metadata["depths"]], ##same as the one above
         "latitude_range": metadata["latitude_range"],
         "longitude_range": metadata["longitude_range"],
+    }
+
+
+@app.get("/temperature")
+def get_temperature(depth: float =0.0):
+    return {
+        "variable": "temperature",
+        "depth": depth,
+        "value": 27.4, # only for test rn
+        "units": "ºC",
+        "status": "test data"
     }
