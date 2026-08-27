@@ -1,12 +1,31 @@
 import xarray as xr
+import numpy as np
 
-
-FILE = "/home/riamudhole/comp-phy/SIH/backend_backup/RSMC_hycom_20260824.nc"
+FILE = "/Users/manavgharat/SIH/SIH26067---Ministry-of-Earth-Sciences-MoES/backend/RSMC_Hycom_Data_Aug_25_2026.nc"
 
 
 class HYCOMModel:
     def __init__(self, filepath=FILE):
         self.ds = xr.open_dataset(filepath)
+
+    @staticmethod
+    def clean_values(values):
+        # Convert the xarray/numpy data to a NumPy array
+        array = np.asarray(values, dtype=float)
+
+        # Convert every value:
+        #
+        #     NaN / infinity -> None
+        #     normal number  -> float
+        cleaned = [
+            [
+                None if not np.isfinite(value) else float(value)
+                for value in row
+            ]
+            for row in array
+        ]
+
+        return cleaned
 
     def metadata(self):
         """Return basic information about the HYCOM dataset."""
@@ -86,6 +105,7 @@ class HYCOMModel:
             LON=slice(None, None, stride)
         )
 
+        # Remove invalid HYCOM values
         temperature = temperature.where(temperature > -1e30)
 
         return temperature
@@ -189,7 +209,7 @@ class HYCOMModel:
             "depth": float(temperature["DEPTH"].values),
             "latitude": temperature["LAT"].values.tolist(),
             "longitude": temperature["LON"].values.tolist(),
-            "values": temperature.values.tolist()
+            "values": self.clean_values(temperature.values)
         }
 
     def salinity_to_dict(
@@ -220,7 +240,7 @@ class HYCOMModel:
             "depth": float(salinity["DEPTH"].values),
             "latitude": salinity["LAT"].values.tolist(),
             "longitude": salinity["LON"].values.tolist(),
-            "values": salinity.values.tolist()
+            "values": self.clean_values(salinity.values)
         }
 
     def currents_to_dict(
@@ -251,8 +271,8 @@ class HYCOMModel:
             "depth": float(u["DEPTH"].values),
             "latitude": u["LAT"].values.tolist(),
             "longitude": u["LON"].values.tolist(),
-            "u": u.values.tolist(),
-            "v": v.values.tolist()
+            "u": self.clean_values(u.values),
+            "v": self.clean_values(u.values)
         }
 
     def close(self):
