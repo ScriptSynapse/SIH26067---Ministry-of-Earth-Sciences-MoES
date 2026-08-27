@@ -1,6 +1,10 @@
+
+#python
 venv/
 __pycache__/
 *.pyc
-*.nc
 test.save
 .idea/
+
+# HYCOM datasets
+*.nc
