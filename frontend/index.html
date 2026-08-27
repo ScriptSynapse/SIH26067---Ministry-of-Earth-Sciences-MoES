@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OCEANX &mdash; Ocean Explorer</title>
+  <meta name="description" content="INCOIS-style 3D ocean data visualization platform integrating HYCOM model output with in-situ observations." />
+
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+
+<!-- ============ TOP NAVIGATION ============ -->
+<header class="topbar" role="banner">
+  <div class="topbar__left">
+    <div class="brand" aria-label="OCEANX Ocean Explorer">
+      <span class="brand__mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M2 17c1.6 1.4 3.2 1.4 4.8 0 1.6-1.4 3.2-1.4 4.8 0 1.6 1.4 3.2 1.4 4.8 0 1.6-1.4 3.2-1.4 4.8 0v2c-1.6 1.4-3.2 1.4-4.8 0-1.6-1.4-3.2-1.4-4.8 0-1.6 1.4-3.2 1.4-4.8 0-1.6-1.4-3.2-1.4-4.8 0v-2zm0-5c1.6 1.4 3.2 1.4 4.8 0 1.6-1.4 3.2-1.4 4.8 0 1.6 1.4 3.2 1.4 4.8 0 1.6-1.4 3.2-1.4 4.8 0v2c-1.6 1.4-3.2 1.4-4.8 0-1.6-1.4-3.2-1.4-4.8 0-1.6 1.4-3.2 1.4-4.8 0-1.6-1.4-3.2-1.4-4.8 0v-2zM12 2l1.2 3.6L17 7l-3.8 1.4L12 12l-1.2-3.6L7 7l3.8-1.4L12 2z"/></svg>
+      </span>
+      <span class="brand__text">
+        <span class="brand__title">OCEANX</span>
+        <span class="brand__subtitle">Ocean Explorer</span>
+      </span>
+    </div>
+    <nav class="topnav" aria-label="Primary">
+      <button class="topnav__item is-active" data-panel="observations">Observations</button>
+      <button class="topnav__item" data-panel="analysis">Analysis</button>
+      <button class="topnav__item" data-panel="datasets">Datasets</button>
+      <button class="topnav__item" data-panel="alerts">Alerts</button>
+    </nav>
+  </div>
+
+  <div class="topbar__right">
+    <div class="search" role="search">
+      <svg viewBox="0 0 24 24" width="15" height="15" class="search__icon" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 5L20.5 19l-5-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"/></svg>
+      <input id="searchInput" type="text" placeholder="Search ocean data..." aria-label="Search ocean data" autocomplete="off" />
+      <div id="searchResults" class="search__results" hidden></div>
+    </div>
+    <div class="status-badge" id="statusBadge" title="Data connection status">
+      <span class="status-dot" id="statusDot" aria-hidden="true"></span>
+      <span id="statusLabel">DATA STREAM</span>
+    </div>
+    <div class="last-updated">
+      <span class="last-updated__label">Updated</span>
+      <span id="lastUpdated" class="mono">--:--:--</span>
+    </div>
+    <button class="icon-btn" id="settingsBtn" aria-label="Settings" title="Settings">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M19.14 12.94a7.14 7.14 0 0 0 .06-.94 7.14 7.14 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.65 8.84a.5.5 0 0 0 .12.64L4.8 11.06a7.14 7.14 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.4.32.6.22l2.39-.96c.5.38 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.56 1.63-.94l2.39.96c.24.1.5.02.6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ============ SETTINGS DRAWER ============ -->
+<aside class="settings-drawer" id="settingsDrawer" hidden aria-label="Settings">
+  <div class="panel__header">
+    <h2>SETTINGS</h2>
+    <button class="icon-btn" id="closeSettings" aria-label="Close settings">&times;</button>
+  </div>
+  <div class="panel__body">
+    <label class="field">
+      <span>API Base URL</span>
+      <input type="text" id="apiBaseInput" class="text-input mono" />
+    </label>
+    <button class="btn btn--ghost" id="applyApiBase">Apply &amp; reconnect</button>
+    <div class="field-hint">Points to the HYCOM model service described in the MoES/SIH26067 backend repository. No live endpoint is currently deployed, so the platform runs in DEMO MODE using data shaped exactly like the backend's <code>HYCOMModel</code> output.</div>
+    <hr class="divider" />
+    <label class="field field--row">
+      <span>Units</span>
+      <select id="unitsSelect" class="text-input">
+        <option value="metric">Metric</option>
+        <option value="imperial">Imperial</option>
+      </select>
+    </label>
+    <label class="field field--row">
+      <span>Reduce motion</span>
+      <input type="checkbox" id="reduceMotion" />
+    </label>
+  </div>
+</aside>
+
+<!-- ============ MAIN APP ============ -->
+<main class="app" id="app">
+
+  <!-- ===== LEFT SIDEBAR ===== -->
+  <aside class="sidebar sidebar--left" aria-label="Data controls">
+
+    <section class="panel">
+      <h3 class="panel__title">DATA CONTROLS</h3>
+      <label class="field">
+        <span>Dataset</span>
+        <select id="datasetSelect" class="text-input">
+          <option value="hycom">INCOIS Ocean Model &mdash; HYCOM</option>
+        </select>
+      </label>
+      <div class="meta-line" id="datasetMeta">Indian Ocean &bull; Loading resolution&hellip;</div>
+    </section>
+
+    <section class="panel">
+      <h3 class="panel__title">VARIABLE</h3>
+      <div class="variable-list" id="variableList" role="listbox" aria-label="Ocean variable"></div>
+    </section>
+
+    <section class="panel">
+      <h3 class="panel__title">VISUALIZATION</h3>
+      <div class="mode-list" id="modeList" role="listbox" aria-label="Visualization mode"></div>
+    </section>
+
+    <section class="panel">
+      <h3 class="panel__title">LAYERS</h3>
+      <div class="layer-list" id="layerList"></div>
+      <label class="field field--row layer-opacity">
+        <span>Layer opacity</span>
+        <input type="range" id="layerOpacity" min="10" max="100" value="85" />
+        <span class="mono" id="layerOpacityValue">85%</span>
+      </label>
+    </section>
+
+  </aside>
+
+  <!-- ===== CENTER VISUALIZATION ===== -->
+  <section class="stage" aria-label="3D ocean visualization">
+
+    <div class="stage__canvaswrap" id="canvasWrap">
+      <canvas id="oceanCanvas"></canvas>
+
+      <div class="stage__loading" id="stageLoading">
+        <div class="spinner" aria-hidden="true"></div>
+        <div id="stageLoadingText">CONNECTING TO OCEAN DATA STREAM&hellip;</div>
+      </div>
+
+      <div class="stage__error" id="stageError" hidden>
+        <div class="stage__error-title">BACKEND CONNECTION UNAVAILABLE</div>
+        <div class="stage__error-sub">Falling back to demo dataset shaped from the HYCOM backend schema.</div>
+        <button class="btn btn--ghost" id="retryBtn">Retry connection</button>
+      </div>
+
+      <div class="mode-tag" id="dataModeTag">DEMO</div>
+
+      <!-- camera / view controls -->
+      <div class="viz-controls" role="group" aria-label="Camera controls">
+        <button class="viz-btn" id="zoomIn" aria-label="Zoom in" title="Zoom in">+</button>
+        <button class="viz-btn" id="zoomOut" aria-label="Zoom out" title="Zoom out">&minus;</button>
+        <button class="viz-btn" id="resetCam" aria-label="Reset camera" title="Reset camera">
+          <svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.75 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        </button>
+        <button class="viz-btn" id="toggleGrid" aria-label="Toggle grid" title="Toggle grid">
+          <svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M3 3h18v18H3V3zm2 2v4h4V5H5zm6 0v4h4V5h-4zm6 0v4h4V5h-4zM5 11v4h4v-4H5zm6 0v4h4v-4h-4zm6 0v4h4v-4h-4zM5 17v2h4v-2H5zm6 0v2h4v-2h-4zm6 0v2h4v-2h-4z"/></svg>
+        </button>
+        <button class="viz-btn" id="fullscreenBtn" aria-label="Fullscreen" title="Fullscreen">
+          <svg viewBox="0 0 24 24" width="15" height="15"><path fill="currentColor" d="M4 9V4h5v2H6v3H4zm16 0V4h-5v2h3v3h2zM4 15v5h5v-2H6v-3H4zm16 0v5h-5v-2h3v-3h2z"/></svg>
+        </button>
+      </div>
+
+      <!-- colorbar -->
+      <div class="colorbar" id="colorbar" aria-hidden="false">
+        <div class="colorbar__max mono" id="cbMax">32</div>
+        <div class="colorbar__gradient" id="cbGradient"></div>
+        <div class="colorbar__min mono" id="cbMin">15</div>
+        <div class="colorbar__units mono" id="cbUnits">&deg;C</div>
+        <div class="colorbar__scale">
+          <button class="pill pill--sm is-active" id="scaleLinear">LIN</button>
+          <button class="pill pill--sm" id="scaleLog">LOG</button>
+        </div>
+      </div>
+
+      <!-- depth / exaggeration controls -->
+      <div class="depth-panel">
+        <div class="depth-panel__row">
+          <span class="depth-panel__label">DEPTH</span>
+          <span class="mono depth-panel__value" id="depthValue">150 m</span>
+          <input type="range" id="depthSlider" min="0" max="5" value="1" step="1" />
+        </div>
+        <div class="depth-panel__row">
+          <span class="depth-panel__label">Vertical exaggeration</span>
+          <span class="mono depth-panel__value" id="exagValue">2.0&times;</span>
+          <input type="range" id="exagSlider" min="1" max="6" value="2" step="0.5" />
+        </div>
+      </div>
+
+      <div class="axis-readout mono" id="axisReadout">LAT -- &bull; LON --</div>
+    </div>
+
+    <!-- ===== TIMELINE ===== -->
+    <div class="timeline" aria-label="Timeline">
+      <button class="viz-btn" id="timePrev" aria-label="Previous timestep">&#9664;</button>
+      <button class="viz-btn" id="timePlay" aria-label="Play">&#9654;</button>
+      <button class="viz-btn" id="timeNext" aria-label="Next timestep">&#9654;&#9654;</button>
+      <span class="timeline__date mono" id="timeCurrentDate">24 AUG 2026 00:00Z</span>
+      <input type="range" id="timeSlider" min="0" max="27" value="0" step="1" class="timeline__slider" />
+      <span class="timeline__range mono" id="timeRange">24 AUG &ndash; 31 AUG 2026</span>
+    </div>
+
+  </section>
+
+  <!-- ===== RIGHT SIDEBAR ===== -->
+  <aside class="sidebar sidebar--right" aria-label="Selected observation">
+
+    <section class="panel" id="observationPanel">
+      <div class="panel__header">
+        <h3 class="panel__title">SELECTED OBSERVATION</h3>
+      </div>
+
+      <div id="noSelection" class="empty-state" hidden>
+        <p>No observation selected.</p>
+        <p class="empty-state__hint">Click an Argo float or glider marker in the visualization.</p>
+      </div>
+
+      <div id="obsDetail">
+        <div class="obs-head">
+          <div>
+            <div class="obs-head__type" id="obsType">ARGO FLOAT</div>
+            <div class="obs-head__id mono" id="obsId">&mdash;</div>
+          </div>
+          <span class="badge badge--active" id="obsStatus">ACTIVE</span>
+        </div>
+
+        <div class="obs-grid">
+          <div class="obs-stat"><span>Latitude</span><strong class="mono" id="obsLat">&mdash;</strong></div>
+          <div class="obs-stat"><span>Longitude</span><strong class="mono" id="obsLon">&mdash;</strong></div>
+          <div class="obs-stat"><span>Last Observation</span><strong class="mono" id="obsTime">&mdash;</strong></div>
+          <div class="obs-stat"><span>Maximum Depth</span><strong class="mono" id="obsMaxDepth">&mdash;</strong></div>
+        </div>
+
+        <div class="obs-vars">
+          <span class="obs-vars__label">Variables</span>
+          <div class="chip-row" id="obsVariables"></div>
+        </div>
+
+        <button class="btn btn--primary btn--block" id="compareBtn">COMPARE WITH MODEL</button>
+
+        <div class="compare-result" id="compareResult" hidden>
+          <div class="compare-result__row">
+            <span>Model &minus; Observation</span>
+            <strong class="mono" id="compareDiff">&mdash;</strong>
+          </div>
+          <div class="compare-result__row">
+            <span>RMSE</span>
+            <strong class="mono" id="compareRmse">&mdash;</strong>
+          </div>
+          <div class="compare-result__note" id="compareNote"></div>
+        </div>
+
+        <div class="profile-block">
+          <h4 class="profile-title" id="profileTitle">VERTICAL TEMPERATURE PROFILE</h4>
+          <div class="profile-legend">
+            <span class="legend-dot legend-dot--model"></span> MODEL
+            <span class="legend-dot legend-dot--obs"></span> OBSERVED
+          </div>
+          <div class="chart-wrap">
+            <canvas id="profileChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </aside>
+
+</main>
+
+<!-- ============ SLIDE-OVER PANELS: DATASETS / ANALYSIS / ALERTS ============ -->
+<div class="overlay-panel" id="panel-datasets" hidden>
+  <div class="overlay-panel__inner">
+    <div class="panel__header">
+      <h2>DATASETS</h2>
+      <button class="icon-btn panel-close" data-close="panel-datasets" aria-label="Close">&times;</button>
+    </div>
+    <div class="panel__body" id="datasetsBody"></div>
+  </div>
+</div>
+
+<div class="overlay-panel" id="panel-analysis" hidden>
+  <div class="overlay-panel__inner">
+    <div class="panel__header">
+      <h2>ANALYSIS</h2>
+      <button class="icon-btn panel-close" data-close="panel-analysis" aria-label="Close">&times;</button>
+    </div>
+    <div class="panel__body">
+      <div class="analysis-form" id="analysisForm">
+        <label class="field">
+          <span>Variable</span>
+          <select id="analysisVariable" class="text-input"></select>
+        </label>
+        <label class="field">
+          <span>Location (lat, lon)</span>
+          <input type="text" id="analysisLocation" class="text-input mono" placeholder="e.g. 12.5, 68.2" />
+        </label>
+        <label class="field">
+          <span>Depth</span>
+          <select id="analysisDepth" class="text-input"></select>
+        </label>
+        <label class="field">
+          <span>Time</span>
+          <select id="analysisTime" class="text-input"></select>
+        </label>
+        <button class="btn btn--primary" id="runAnalysis">Run analysis</button>
+      </div>
+      <div class="analysis-results" id="analysisResults"></div>
+      <div class="chart-wrap chart-wrap--tall">
+        <canvas id="analysisChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay-panel" id="panel-alerts" hidden>
+  <div class="overlay-panel__inner">
+    <div class="panel__header">
+      <h2>ALERTS</h2>
+      <button class="icon-btn panel-close" data-close="panel-alerts" aria-label="Close">&times;</button>
+    </div>
+    <div class="panel__body" id="alertsBody"></div>
+  </div>
+</div>
+
+<!-- ============ LIBRARIES (CDN) ============ -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+
+<!-- ============ APP MODULES ============ -->
+<script src="js/utils.js"></script>
+<script src="js/state.js"></script>
+<script src="js/api.js"></script>
+<script src="js/model.js"></script>
+<script src="js/observations.js"></script>
+<script src="js/map3d.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/controls.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

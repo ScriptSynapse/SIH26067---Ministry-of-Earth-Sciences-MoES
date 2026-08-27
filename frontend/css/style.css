@@ -1,0 +1,161 @@
+/* ============================================================
+   OCEANX — base styles, tokens, typography
+   ============================================================ */
+
+:root {
+  /* surfaces */
+  --bg-main: #050b14;
+  --bg-panel: #08121f;
+  --bg-panel-hover: #0d1d2d;
+  --bg-elevated: #0b1826;
+  --bg-canvas: #020608;
+  --border: #12344d;
+  --border-soft: #0d2436;
+
+  /* accents */
+  --cyan: #19d8ff;
+  --cyan-soft: #0c7f98;
+  --cyan-dim: rgba(25, 216, 255, 0.12);
+  --success: #14d9a2;
+  --warning: #f5b942;
+  --critical: #ff5470;
+
+  /* text */
+  --text-primary: #d8edf7;
+  --text-secondary: #7895a8;
+  --text-tertiary: #4c6579;
+
+  /* misc */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  --glow-cyan: 0 0 0 1px rgba(25, 216, 255, 0.25), 0 0 18px rgba(25, 216, 255, 0.12);
+
+  --font-ui: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", "Consolas", monospace;
+
+  --topbar-h: 56px;
+  --timeline-h: 52px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+body {
+  background-image:
+          radial-gradient(ellipse at 20% -10%, rgba(25, 216, 255, 0.06), transparent 45%),
+          radial-gradient(ellipse at 100% 0%, rgba(12, 127, 152, 0.08), transparent 40%);
+}
+
+.mono { font-family: var(--font-mono); letter-spacing: 0.02em; }
+
+h1, h2, h3, h4 { margin: 0; font-weight: 600; }
+
+a { color: var(--cyan); }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, select {
+  font-family: inherit;
+  color: var(--text-primary);
+}
+
+::selection { background: var(--cyan-dim); color: var(--text-primary); }
+
+/* scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* The `hidden` attribute must always win, even over components that set
+   their own `display` (flex/grid) unconditionally — otherwise an author
+   rule like `.overlay-panel { display: flex }` silently defeats it. */
+[hidden] {
+  display: none !important;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.field--row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.text-input {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  color: var(--text-primary);
+  font-size: 12.5px;
+  width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.text-input:focus {
+  border-color: var(--cyan-soft);
+  box-shadow: var(--glow-cyan);
+}
+
+.field-hint {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+  margin-top: 4px;
+}
+
+.field-hint code {
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-soft);
+  margin: 16px 0;
+}
+
+.empty-state {
+  padding: 24px 8px;
+  color: var(--text-tertiary);
+  text-align: center;
+  font-size: 12px;
+}
+
+.empty-state__hint { font-size: 11px; margin-top: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
