@@ -16,7 +16,7 @@ const Controls = (() => {
       "variableList", "modeList", "layerList", "layerOpacity", "layerOpacityValue",
       "depthSlider", "depthValue", "exagSlider", "exagValue",
       "scaleLinear", "scaleLog", "cbMin", "cbMax", "cbUnits", "cbGradient",
-      "zoomIn", "zoomOut", "resetCam", "toggleGrid", "fullscreenBtn", "canvasWrap",
+      "zoomIn", "zoomOut", "resetCam", "toggleGrid", "fullscreenBtn", "canvasWrap", "pointPopup",
       "timePrev", "timePlay", "timeNext", "timeSlider", "timeCurrentDate", "timeRange",
       "searchInput", "searchResults", "settingsBtn", "settingsDrawer", "closeSettings",
       "apiBaseInput", "applyApiBase", "datasetMeta",
@@ -511,6 +511,75 @@ const Controls = (() => {
   }
 
   // ---------------------------------------------------------------
+  // POINT INSPECTOR (click anywhere on the ocean surface)
+  // ---------------------------------------------------------------
+  let lastPoint = null;
+
+  function renderPointPopupContent() {
+    if (!lastPoint) return;
+    const sample = Map3D.sampleFieldAt(lastPoint.lat, lastPoint.lon);
+    const def = Model.VARIABLES[appState.variable];
+
+    document.getElementById("ppLat").textContent = `${lastPoint.lat.toFixed(2)}\u00B0`;
+    document.getElementById("ppLon").textContent = `${lastPoint.lon.toFixed(2)}\u00B0`;
+    document.getElementById("ppVarLabel").textContent = def ? def.label : appState.variable;
+    document.getElementById("ppValue").textContent = (sample && sample.value !== null && sample.value !== undefined)
+        ? `${sample.value.toFixed(2)} ${def ? def.units : ""}`
+        : "No data at this depth/time";
+
+    const depths = (appState.metadata && appState.metadata.depths) || Model.DEMO_DEPTHS;
+    const depthValue = depths[Utils.clamp(appState.depthIndex, 0, depths.length - 1)];
+    document.getElementById("ppDepth").textContent = `${depthValue} m`;
+
+    const times = (appState.metadata && appState.metadata.times) || Model.demoTimes().map(d => d.toISOString());
+    const t = new Date(times[Utils.clamp(appState.timeIndex, 0, times.length - 1)]);
+    document.getElementById("ppTime").textContent = Utils.formatDate(t);
+
+    const noteEl = document.getElementById("ppNote");
+    if (def && !def.supportedByBackend) {
+      noteEl.textContent = "DEMO DATA \u2014 this variable is not present in the current backend dataset.";
+    } else if (appState.dataMode !== "live") {
+      noteEl.textContent = "DEMO DATA \u2014 no live backend connected.";
+    } else {
+      noteEl.textContent = "";
+    }
+  }
+
+  function positionPointPopup(clientX, clientY) {
+    const wrap = els.canvasWrap;
+    const popup = els.pointPopup;
+    const rect = wrap.getBoundingClientRect();
+    let x = clientX - rect.left + 14;
+    let y = clientY - rect.top + 14;
+    const maxX = rect.width - popup.offsetWidth - 8;
+    const maxY = rect.height - popup.offsetHeight - 8;
+    x = Utils.clamp(x, 8, Math.max(8, maxX));
+    y = Utils.clamp(y, 8, Math.max(8, maxY));
+    popup.style.left = `${x}px`;
+    popup.style.top = `${y}px`;
+  }
+
+  function showPointPopup({ lat, lon, clientX, clientY }) {
+    lastPoint = { lat, lon };
+    els.pointPopup.hidden = false;
+    renderPointPopupContent();
+    positionPointPopup(clientX, clientY);
+  }
+
+  function hidePointPopup() {
+    if (els.pointPopup) els.pointPopup.hidden = true;
+  }
+
+  function refreshPointPopupIfOpen() {
+    if (!els.pointPopup || els.pointPopup.hidden || !lastPoint) return;
+    renderPointPopupContent();
+  }
+
+  function bindPointPopup() {
+    document.getElementById("closePointPopup").addEventListener("click", hidePointPopup);
+  }
+
+  // ---------------------------------------------------------------
   // BOOTSTRAP
   // ---------------------------------------------------------------
   function init(hooks) {
@@ -531,6 +600,7 @@ const Controls = (() => {
     bindTopNav();
     bindCompareButton(hooks.getSelected);
     bindAnalysisRun();
+    bindPointPopup();
 
     els.retryBtn.addEventListener("click", () => hooks.onRetry?.());
   }
@@ -538,6 +608,7 @@ const Controls = (() => {
   return {
     init, configureDepthSlider, configureTimeline, renderObservationPanel,
     renderDatasetsPanel, populateAnalysisSelectors, renderAlertsPanel,
-    updateColorbar, els: () => els
+    updateColorbar, showPointPopup, hidePointPopup, refreshPointPopupIfOpen,
+    els: () => els
   };
 })();

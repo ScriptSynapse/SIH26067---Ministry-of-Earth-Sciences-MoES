@@ -25,8 +25,9 @@
     try {
       Map3D.init(document.getElementById("oceanCanvas"));
       Map3D.setOnMarkerClick((obs) => selectObservation(obs));
-      Map3D.setOnSurfaceClick(({ lat, lon }) => {
+      Map3D.setOnSurfaceClick(({ lat, lon, sample, clientX, clientY }) => {
         axisReadout.textContent = `LAT ${lat.toFixed(2)}\u00B0 \u2022 LON ${lon.toFixed(2)}\u00B0`;
+        Controls.showPointPopup({ lat, lon, sample, clientX, clientY });
       });
     } catch (err) {
       console.error("[OCEANX] 3D scene failed to initialize:", err);
@@ -75,10 +76,10 @@
     }
 
     // 4) reactive updates
-    StateBus.on("variable-changed", () => refreshField());
+    StateBus.on("variable-changed", () => { refreshField(); Controls.refreshPointPopupIfOpen(); });
     StateBus.on("mode-changed", () => refreshField());
-    StateBus.on("depth-changed", () => refreshField());
-    StateBus.on("time-changed", () => { refreshField(); refreshSelectedProfile(); });
+    StateBus.on("depth-changed", () => { refreshField(); Controls.refreshPointPopupIfOpen(); });
+    StateBus.on("time-changed", () => { refreshField(); refreshSelectedProfile(); Controls.refreshPointPopupIfOpen(); });
     StateBus.on("exaggeration-changed", () => refreshField());
     StateBus.on("colorscale-changed", () => refreshField());
 
@@ -180,6 +181,7 @@
     function selectObservation(obs) {
       appState.selectedObservation = obs;
       if (scene3DAvailable) Map3D.highlightObservation(obs);
+      Controls.hidePointPopup();
       Controls.renderObservationPanel(obs, appState.timeIndex);
       refreshSelectedProfile();
     }

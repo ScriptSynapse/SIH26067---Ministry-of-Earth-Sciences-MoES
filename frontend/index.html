@@ -179,7 +179,23 @@
         </div>
       </div>
 
-      <div class="axis-readout mono" id="axisReadout">LAT -- &bull; LON --</div>
+      <div class="axis-readout mono" id="axisReadout">Click the ocean to inspect a point</div>
+
+      <!-- point inspector: appears where the user clicks the ocean surface -->
+      <div class="point-popup" id="pointPopup" hidden>
+        <div class="point-popup__header">
+          <span>OCEAN POINT</span>
+          <button class="icon-btn point-popup__close" id="closePointPopup" aria-label="Close point details">&times;</button>
+        </div>
+        <div class="point-popup__body">
+          <div class="point-popup__row"><span>Latitude</span><strong class="mono" id="ppLat">&mdash;</strong></div>
+          <div class="point-popup__row"><span>Longitude</span><strong class="mono" id="ppLon">&mdash;</strong></div>
+          <div class="point-popup__row"><span id="ppVarLabel">Temperature</span><strong class="mono" id="ppValue">&mdash;</strong></div>
+          <div class="point-popup__row"><span>Depth</span><strong class="mono" id="ppDepth">&mdash;</strong></div>
+          <div class="point-popup__row"><span>Time</span><strong class="mono" id="ppTime">&mdash;</strong></div>
+        </div>
+        <div class="point-popup__note" id="ppNote"></div>
+      </div>
     </div>
 
     <!-- ===== TIMELINE ===== -->
